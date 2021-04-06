@@ -2,12 +2,13 @@
 
 import json
 import random
-from datetime import datetime, timedelta
 import requests
+import threading
+from datetime import datetime, timedelta
 from requests.adapters import HTTPAdapter
 
-import time
-import threading
+# 文件互斥锁
+lock = threading.Lock()
 
 s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=2))
@@ -28,24 +29,39 @@ class IPBlockedException(Exception):
     pass
 
 
-def save_point(a, b):
+class OtherException(Exception):
+    pass
+
+
+class TimeoutException(Exception):
+    pass
+
+
+def save_point(tp, args, thread_id=None):
     """
     保存断点
-    :param a: 参数1
-    :param b: 参数2
+    :param thread_id:
+    :param tp: 断点类型
+    :param args: 参数列表
     """
-    with open('../data/checkpoints.json', 'w') as f:
-        json.dump({'a': a, 'b': b}, f)
+    with open('../raw_data/checkpoints.json', 'r') as f:
+        j = json.load(f)
+    if tp == 'flights':
+        j[tp][thread_id] = args
+    else:
+        j[tp] = args
+    with open('../raw_data/checkpoints.json', 'w') as f:
+        json.dump(j, f)
 
 
-def load_point():
+def load_point(tp):
     """
     读取断点
     :return: 返回断点
     """
-    with open('../data/checkpoints.json', 'r') as f:
+    with open('../raw_data/checkpoints.json', 'r') as f:
         j = json.load(f)
-        return j['a'], j['b']
+        return j[tp]
 
 
 def get_cities():
@@ -84,6 +100,61 @@ def user_agent():
         'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0',
     ]
     return random.choice(ua_list)
+
+
+def get_lowest_prices(source, destination, proxy=None):
+    """
+    获取今天购买的90天的机票最低价
+    :param source: 出发地
+    :param destination: 目的地
+    :param proxy: 代理
+    :return: price list
+    """
+    weeks = {'周一': '1', '周二': '2', '周三': '3', '周四': '4', '周五': '5', '周六': '6', '周日': '7'}
+    url = 'https://m.ctrip.com/restapi/flight/html5/swift/getLowestPriceCalendar?_fxpcqlniredt=09031033112988560870'
+    j = {"stype": 1, "dCty": source, "aCty": destination, "flag": None, "start": "", "end": "", "classLevels": ["Y"],
+         "head": {"cid": "09031033112988560870", "ctok": "", "cver": "1.0", "lang": "01", "sid": "8888",
+                  "syscode": "09", "auth": None,
+                  "extension": [{"name": "aid", "value": "4899"}, {"name": "sid", "value": "135371"},
+                                {"name": "protocal", "value": "https"}]}, "contentType": "json"}
+    headers = {
+        'Host': 'm.ctrip.com',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0',
+        'Accept': 'application/json',
+        'Accept-Language': 'zh-CN,en-US;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json',
+        'Content-Length': '335',
+        'Origin': 'https://m.ctrip.com',
+        'Connection': 'keep-alive',
+        'Referer': 'https://m.ctrip.com/html5/flight/swift/domestic/%s/%s/2021-04-30' % (source, destination),
+        'TE': 'Trailers'}
+    try:
+        response = s.post(url=url, headers=headers, json=j,
+                          timeout=7)  # , proxies={"https": "http://{}".format(proxy)})
+        prices_item = json.loads(response.text).get('prices', [])
+        prices = []
+        for p in prices_item:
+            if not p['price']:
+                continue
+            line = [source,
+                    destination,
+                    p['dDate'],
+                    weeks[p['dweek']],
+                    p['price'],
+                    p['discount'],
+                    p['flightNo'],
+                    p['airline'],
+                    p['airname'],
+                    datetime.strftime(datetime.now(), '%Y-%m-%d')]
+            prices.append(','.join([str(i) for i in line]) + '\n')
+    except requests.exceptions.RequestException:
+        raise TimeoutException
+    except Exception:
+        raise OtherException
+    else:
+        return prices
 
 
 def request(source, destination, date, proxy):
@@ -151,10 +222,9 @@ def request(source, destination, date, proxy):
                         len(f['mutilstn'][0]['fsitem'])]
                 flights.append(','.join([str(i) for i in line]) + '\n')
     except requests.exceptions.RequestException as e:
-        print('Time out', end='\t')
-        raise Exception("Time out")
-    except:
-        raise Exception("Other error")
+        raise TimeoutException
+    except Exception:
+        raise OtherException
     else:
         rlt = json.loads(response.text).get('rlt', None)
         if rlt == 508 or rlt == 509:
@@ -165,102 +235,81 @@ def request(source, destination, date, proxy):
         return flights
 
 
-def crawl_one_city(departure='CTU'):
-    """
-    爬取一个城市的相关数据
-    :param departure: 出发地，默认成都
-    :return: 无
-    """
-    # 从断点加载
-    date, i = load_point()
-
-    # 城市列表
-    with open('../data/cities.json') as f:
-        cities = list(set([c['code'] for c in json.load(f)['inLandData']['inlandHot']]))
-        cities.sort()
-
-    # 日期列表
-    date_list = [datetime.strftime(datetime.strptime(date, '%Y-%m-%d') + timedelta(i), '%Y-%m-%d')
-                 for i in range(120)]
-
-    # 去程
-    exception = 0
-    for d in date_list:
-        while i < len(cities):
-            if cities[i] == 'CTU':
-                i += 1
-            retry_count = 5  # 重复2次
-            proxy = get_proxy().get("proxy")
-            while retry_count > 0:
-                try:
-                    flights = request(departure, cities[i], d, proxy)
-                    with open('../data/flights.csv', 'a') as f:
-                        f.writelines(flights)
-                except IPBlockedException:
-                    print('IP Blocked', i, departure, '-->', cities[i], d)
-                    retry_count -= 3
-                except:
-                    print('Other Error', i, departure, '-->', cities[i], d)
-                    retry_count -= 2
-                else:
-                    exception = 0
-                    i += 1
-                    break
-            if retry_count <= 0:
-                print('Delete proxy', proxy)
-                delete_proxy(proxy)
-                exception += 1
-                if exception > 5:
-                    save_point(d, i)
-                    return
-        i = 0
-
-    # 返程
-    exception = 0
-    for d in date_list:
-        while i < len(cities):
-            if cities[i] == 'CTU':
-                i += 1
-            retry_count = 5  # 重复5次
-            proxy = get_proxy().get("proxy")
-            while retry_count > 0:
-                try:
-                    flights_return = request(cities[i], departure, d, proxy)
-                    with open('../data/flights_ctu.csv', 'a') as f:
-                        f.writelines(flights_return)
-                except IPBlockedException:
-                    print('IP Blocked', i, cities[i], '-->', departure, d)
-                    retry_count -= 3
-                except:
-                    print('Other Error', i, cities[i], '-->', departure, d)
-                    retry_count -= 2
-                else:
-                    exception = 0
-                    i += 1
-                    break
-            if retry_count <= 0:
-                print('Delete proxy:', proxy)
-                delete_proxy(proxy)
-                exception += 1
-                if exception >= 5:
-                    save_point(d, i)
-                    return
-        i = 0
-
-
-def crawl_one_day(day='2020-07-07'):
+def crawl_flights(thread_id):
     """
     爬取一天的数据
-    :param day: 日期
     :return:
     """
-    # 加载断点
-    i, j = load_point()
+    # 日期列表
+    dates = [datetime.strftime(datetime.now() + timedelta(i), '%Y-%m-%d') for i in range(48)]
 
     # 城市列表
-    with open('../data/cities.json') as f:
-        cities = list(set([c['code'] for c in json.load(f)['inLandData']['inlandCity']]))
+    with open('../raw_data/mainCities.json') as f:
+        cities = list(set([c['code'] for c in json.load(f)['mainCity']]))
         cities.sort()
+
+    # 加载断点
+    points = load_point('flights')[thread_id]
+    d, i, j = points[0], points[1], points[2]
+
+    exception = 0
+    while d < (thread_id + 1) * 6:
+        while i < len(cities):
+            while j < len(cities):
+                if i == j:
+                    j += 1
+                    continue
+                retry_count = 1  # 重复1次
+                proxy = get_proxy().get("proxy")
+                while retry_count > 0:
+                    try:
+                        flights = request(cities[i], cities[j], dates[d], proxy)
+                        lock.acquire()
+                        with open('../raw_data/flights.csv', 'a') as f:
+                            f.writelines(flights)
+                        lock.release()
+                    except IPBlockedException:
+                        print('%s: IP Blocked\t%s\t%s %s --> %s %s\n' %
+                              (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
+                        retry_count -= 1
+                    except OtherException:
+                        print('%s: Other Error\t%s\t%s %s --> %s %s\n' %
+                              (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
+                        retry_count -= 1
+                    else:
+                        exception = 0
+                        j += 1
+                        break
+                if retry_count <= 0:
+                    print('Delete proxy:', proxy)
+                    delete_proxy(proxy)
+                    exception += 1
+                    if exception >= 5:
+                        lock.acquire()
+                        save_point('flights', [d, i, j], thread_id)
+                        lock.release()
+                        return
+            j = 0
+            i += 1
+        i = 0
+        d += 1
+
+    save_point('flights', [thread_id * 6, 0, 0], thread_id)
+
+
+def crawl_prices():
+    """
+    爬取今天购买未来90天每日最低价机票
+    :return:
+    """
+    # 城市列表
+    with open('../raw_data/mainCities.json') as f:
+        cities = list(set([c['code'] for c in json.load(f)['mainCity']]))
+        cities.sort()
+
+    # 加载断点
+    index = load_point('prices')
+    i, j = index[0], index[1]
 
     exception = 0
     while i < len(cities):
@@ -269,58 +318,41 @@ def crawl_one_day(day='2020-07-07'):
                 j += 1
                 continue
             retry_count = 1  # 重复1次
-            proxy = get_proxy().get("proxy")
+            # proxy = get_proxy().get("proxy")
             while retry_count > 0:
                 try:
-                    flights = request(cities[i], cities[j], day, proxy)
-                    with open('../data/flights_day.csv', 'a') as f:
-                        f.writelines(flights)
+                    prices = get_lowest_prices(cities[i], cities[j])
+                    with open('../raw_data/lowest_prices.csv', 'a') as f:
+                        f.writelines(prices)
                 except IPBlockedException:
                     print('IP Blocked', i, cities[i], '-->', j, cities[j])
                     retry_count -= 1
-                except:
-                    print('Other Error', i, cities[i], '-->', j, cities[j])
+                except TimeoutException:
+                    print('Time Out', i, cities[i], '-->', j, cities[j])
                     retry_count -= 1
                 else:
                     exception = 0
                     j += 1
                     break
             if retry_count <= 0:
-                print('Delete proxy:', proxy)
-                delete_proxy(proxy)
+                # print('Delete proxy:', proxy)
+                # delete_proxy(proxy)
                 exception += 1
                 if exception >= 5:
-                    save_point(i, j)
+                    save_point('prices', [i, j])
                     return
         j = 0
         i += 1
 
-
-share = 0
-lock = threading.Lock()
-
-
-def main():
-    global share
-    time.sleep(random.randint(1, 6))
-    lock.acquire()
-    try:
-        share += 1
-        print('%s, share:' % threading.current_thread().getName(), share)
-    finally:
-        lock.release()
+    save_point('prices', [0, 0])
 
 
 if __name__ == '__main__':
-    # crawl_one_city()
-    # crawl_one_day()
-    # threads = [threading.Thread(target=main, name='Thread-%d' % i) for i in range(1, 9)]
-    # for t in threads:
-    #     t.start()
-    #
-    # for t in threads:
-    #     t.join()
-    #
-    # print('%s id ended.' % threading.current_thread().name)
+    threads = [threading.Thread(target=crawl_flights, name='Thread-%d' % (i + 1), args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
 
-    print(get_cities())
+    for t in threads:
+        t.join()
+
+    print('%s id ended.' % threading.current_thread().name)
