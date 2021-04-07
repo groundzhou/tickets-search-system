@@ -17,12 +17,12 @@ s.mount('https://', HTTPAdapter(max_retries=2))
 
 # 从ip池获取代理ip
 def get_proxy():
-    return requests.get("http://localhost:5010/get/").json()
+    return requests.get("http://192.168.8.101:5010/get/").json()
 
 
 # 删除失效ip
 def delete_proxy(proxy):
-    requests.get("http://localhost:5010/delete/?proxy={}".format(proxy))
+    requests.get("http://192.168.8.101:5010/delete/?proxy={}".format(proxy))
 
 
 class IPBlockedException(Exception):
@@ -46,10 +46,10 @@ def save_point(tp, args, thread_id=None):
     """
     with open('../raw_data/checkpoints.json', 'r') as f:
         j = json.load(f)
-    if tp == 'flights':
-        j[tp][thread_id] = args
-    else:
+    if tp == 'prices':
         j[tp] = args
+    else:
+        j[tp][thread_id] = args
     with open('../raw_data/checkpoints.json', 'w') as f:
         json.dump(j, f)
 
@@ -236,16 +236,12 @@ def request(source, destination, date, proxy):
 
 
 def crawl_flights(thread_id):
-    """
-    爬取一天的数据
-    :return:
-    """
     # 日期列表
     dates = [datetime.strftime(datetime.now() + timedelta(i), '%Y-%m-%d') for i in range(48)]
 
     # 城市列表
     with open('../raw_data/mainCities.json') as f:
-        cities = list(set([c['code'] for c in json.load(f)['mainCity']]))
+        cities = list(set([c['code'] for c in json.load(f)['bigCity']]))
         cities.sort()
 
     # 加载断点
@@ -272,7 +268,11 @@ def crawl_flights(thread_id):
                         print('%s: IP Blocked\t%s\t%s %s --> %s %s\n' %
                               (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
                         retry_count -= 1
-                    except OtherException:
+                    except TimeoutException:
+                        print('%s: Time Out\t%s\t%s %s --> %s %s\n' %
+                              (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
+                        retry_count -= 1
+                    except:
                         print('%s: Other Error\t%s\t%s %s --> %s %s\n' %
                               (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
                         retry_count -= 1
@@ -281,7 +281,7 @@ def crawl_flights(thread_id):
                         j += 1
                         break
                 if retry_count <= 0:
-                    print('Delete proxy:', proxy)
+                    print('\t\tDelete proxy:', proxy)
                     delete_proxy(proxy)
                     exception += 1
                     if exception >= 5:
@@ -295,6 +295,57 @@ def crawl_flights(thread_id):
         d += 1
 
     save_point('flights', [thread_id * 6, 0, 0], thread_id)
+
+
+def crawl_flights2(thread_id):
+    """
+    爬取北京到昆明的数据
+    :return:
+    """
+    # 日期列表
+    dates = [datetime.strftime(datetime.now() + timedelta(i), '%Y-%m-%d') for i in range(48)]
+
+    # 加载断点
+    d = load_point('bjskmg')[thread_id]
+
+    exception = 0
+    while d < (thread_id + 1) * 6:
+        retry_count = 1  # 重复1次
+        proxy = get_proxy().get("proxy")
+        while retry_count > 0:
+            try:
+                flights = request('BJS', 'KMG', dates[d], proxy)
+                lock.acquire()
+                with open('../raw_data/flights2.csv', 'a') as f:
+                    f.writelines(flights)
+                lock.release()
+            except IPBlockedException:
+                print('%s: IP Blocked\t%s\n' % (threading.current_thread().name, dates[d]), end='')
+                retry_count -= 1
+            except TimeoutException:
+                print('%s: Time Out\t%s\n' %
+                      (threading.current_thread().name, dates[d]), end='')
+                retry_count -= 1
+            except:
+                print('%s: Other Error\t%s\n' %
+                      (threading.current_thread().name, dates[d]), end='')
+                retry_count -= 1
+            else:
+                exception = 0
+                d += 1
+                break
+        if retry_count <= 0:
+            print('\t\tDelete proxy:', proxy)
+            delete_proxy(proxy)
+            exception += 1
+            if exception >= 5:
+                lock.acquire()
+                save_point('bjskmg', d, thread_id)
+                lock.release()
+                return
+    d += 1
+
+    save_point('bjskmg', thread_id * 6, thread_id)
 
 
 def crawl_prices():
@@ -356,3 +407,5 @@ if __name__ == '__main__':
         t.join()
 
     print('%s id ended.' % threading.current_thread().name)
+
+    # crawl_prices()
