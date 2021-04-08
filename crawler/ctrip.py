@@ -219,7 +219,8 @@ def request(source, destination, date, proxy):
                         f['policyinfo'][0]['priceinfo'][0]['drate'],
                         f['policyinfo'][0]['classinfor'][0]['display'],
                         punctuality[0] if punctuality else '',
-                        len(f['mutilstn'][0]['fsitem'])]
+                        len(f['mutilstn'][0]['fsitem']),
+                        datetime.strftime(datetime.now(), '%Y-%m-%d')]
                 flights.append(','.join([str(i) for i in line]) + '\n')
     except requests.exceptions.RequestException as e:
         raise TimeoutException
@@ -245,7 +246,9 @@ def crawl_flights(thread_id):
         cities.sort()
 
     # 加载断点
+    lock.acquire()
     points = load_point('flights')[thread_id]
+    lock.release()
     d, i, j = points[0], points[1], points[2]
 
     exception = 0
@@ -293,8 +296,9 @@ def crawl_flights(thread_id):
             i += 1
         i = 0
         d += 1
-
-    save_point('flights', [thread_id * 6, 0, 0], thread_id)
+    lock.acquire()
+    save_point('flights', [d, i, j], thread_id)
+    lock.release()
 
 
 def crawl_flights2(thread_id):
@@ -345,7 +349,7 @@ def crawl_flights2(thread_id):
                 return
     d += 1
 
-    save_point('bjskmg', thread_id * 6, thread_id)
+    save_point('bjskmg', d, thread_id)
 
 
 def crawl_prices():
@@ -395,7 +399,7 @@ def crawl_prices():
         j = 0
         i += 1
 
-    save_point('prices', [0, 0])
+    save_point('prices', [i, j])
 
 
 if __name__ == '__main__':
