@@ -414,4 +414,4 @@ if __name__ == '__main__':
 
     print('%s id ended.' % threading.current_thread().name)
 
-    crawl_prices()
+    # crawl_prices()
