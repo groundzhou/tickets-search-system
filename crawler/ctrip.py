@@ -4,6 +4,7 @@ import json
 import random
 import requests
 import threading
+import time
 from datetime import datetime, timedelta
 from requests.adapters import HTTPAdapter
 
@@ -17,13 +18,12 @@ s.mount('https://', HTTPAdapter(max_retries=2))
 
 # 从ip池获取代理ip
 def get_proxy():
-    return requests.get("http://192.168.8.101:5010/get/").json()
+    return requests.get("http://localhost:5010/get/").json()
 
 
 # 删除失效ip
 def delete_proxy(proxy):
-    requests.get("http://192.168.8.101:5010/delete/?proxy={}".format(proxy))
-
+    requests.get("http://localhost:5010/delete/?proxy={}".format(proxy))
 
 class IPBlockedException(Exception):
     pass
@@ -284,10 +284,12 @@ def crawl_flights(thread_id):
                         j += 1
                         break
                 if retry_count <= 0:
-                    print('\t\tDelete proxy:', proxy)
+                    print('\tDelete proxy:', proxy)
                     delete_proxy(proxy)
                     exception += 1
-                    if exception >= 5:
+                    if 5 <= exception < 8:
+                        time.sleep(10)
+                    elif exception >= 8:
                         lock.acquire()
                         save_point('flights', [d, i, j], thread_id)
                         lock.release()
@@ -339,7 +341,7 @@ def crawl_flights2(thread_id):
                 d += 1
                 break
         if retry_count <= 0:
-            print('\t\tDelete proxy:', proxy)
+            print('\tDelete proxy:', proxy)
             delete_proxy(proxy)
             exception += 1
             if exception >= 5:
@@ -412,4 +414,4 @@ if __name__ == '__main__':
 
     print('%s id ended.' % threading.current_thread().name)
 
-    # crawl_prices()
+    crawl_prices()
