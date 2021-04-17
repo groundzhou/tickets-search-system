@@ -1,17 +1,43 @@
 <!DOCTYPE html>
-<html lang="">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title><%= htmlWebpackPlugin.options.title %></title>
-  </head>
-  <body>
-    <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+  <title>Tickets Search System</title>
+</head>
+
+<body>
+  <noscript>
+    <strong>We're sorry but vue-demo doesn't work properly without JavaScript enabled. Please enable it to
+      continue.</strong>
+  </noscript>
+  <div id="app"></div>
+  <!-- built files will be auto injected -->
+</body>
+
+<script type="text/javascript">
+  var a = document.getElementById('disc-50');
+  a.onclick = function () {
+    Clipboard_CopyTo("T9TTVSQB");
+    var div = document.getElementById('code-success');
+    div.style.display = 'block';
+    setTimeout(function () {
+      document.getElementById('code-success').style.display = 'none';
+    }, 900);
+
+  };
+
+  function Clipboard_CopyTo(value) {
+    var tempInput = document.createElement("input");
+    tempInput.value = value;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+  }
+</script>
+
 </html>

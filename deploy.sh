@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+project_name="tickets-search-system"
+base_dir="/home/ground/projects"
+
 help() {
   cat <<-EOF
     -h --help       帮助文档
@@ -19,43 +22,36 @@ update() {
 
 proxypool() {
   if [ "$1" = "start" ]; then
-    ssh ground@hadoop-2 <<remotessh
-    cd ~/projects/proxy_pool-master
+    cd "$base_dir"/proxy_pool-master || exit
 
     if [[ -f 1.pid ]]; then
-      kill -9 \`cat 1.pid\`
+      kill -9 $(cat 1.pid)
     fi
     if [[ -f 2.pid ]]; then
-      kill -9 \`cat 2.pid\`
+      kill -9 $(cat 2.pid)
     fi
 
     python proxyPool.py server > /dev/null 2>&1 &
-    echo \$! > 1.pid
+    echo $! > 1.pid
     python proxyPool.py schedule > /dev/null 2>&1 &
-    echo \$! > 2.pid
-    exit
-remotessh
+    echo $! > 2.pid
   fi
 
   if [ "$1" = "stop" ]; then
-    ssh ground@hadoop-2 <<remotessh
-    cd ~/projects/proxy_pool-master
-    kill -9 \`cat 1.pid\`
-    kill -9 \`cat 2.pid\`
+    cd "$base_dir"/proxy_pool-master || exit
+    kill -9 $(cat 1.pid)
+    kill -9 $(cat 2.pid)
     rm 1.pid
     rm 2.pid
-    exit
-remotessh
   fi
+
   exit 0
 }
 
 crawl() {
-  ssh ground@hadoop-2 <<remotessh
-  cd ~/projects/tickets-search-system/crawler
+  cd "$base_dir"/"$project_name"/crawler || exit
   python ./ctrip.py
-  exit
-remotessh
+
   exit 0
 }
 
@@ -63,7 +59,7 @@ run() {
   exit 0
 }
 
-while [ -n "$1" ]; do #这里通过判断$1是否存在
+if [ -n "$1" ]; then #这里通过判断$1是否存在
   case $1 in
   -h | --help) help ;;
   -u | --update) update;;
@@ -71,4 +67,6 @@ while [ -n "$1" ]; do #这里通过判断$1是否存在
   -c | --crawl) crawl ;;
   -r | --run) run ;;
   esac
-done
+else
+  help
+fi
