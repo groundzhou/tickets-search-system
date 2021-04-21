@@ -48,3 +48,24 @@ CREATE EXTERNAL TABLE dws_price
     cdate        STRING
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
     STORED AS TEXTFILE LOCATION '/warehouse/dws-price/';
+
+
+-- 2019年北京至昆明数据
+DROP TABLE IF EXISTS bjs_kmg;
+CREATE EXTERNAL TABLE bjs_kmg
+(
+    flight_num    STRING,
+    share         STRING,
+    dtime         STRING,
+    atime         STRING,
+    ctime         STRING,
+    discount      DOUBLE,
+    price         INT,
+    ahead         INT,
+    dairport_code STRING,
+    dcity_code    STRING,
+    aairport_code STRING,
+    acity_code    STRING,
+    ddate         STRING
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE LOCATION '/warehouse/bjs_kmg/';

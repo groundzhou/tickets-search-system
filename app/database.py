@@ -36,7 +36,8 @@ def init_db_command():
     """Clear the existing data and create new tables."""
     db = get_db()
     with db.cursor() as cur:
-        cur.execute('CREATE TABLE test (id serial PRIMARY KEY, num integer, data varchar);')
+        with current_app.open_resource('schema.sql') as f:
+            cur.execute(f.read().decode('utf8'))
     db.commit()
     click.echo('Initialized the database.')
 
@@ -47,7 +48,8 @@ def drop_db_command():
     """Clear all tables."""
     db = get_db()
     with db.cursor() as cur:
-        cur.execute('DROP TABLE test;')
+        # cur.execute('DROP TABLE test;')
+        pass
     db.commit()
     click.echo('Drop all tables.')
 

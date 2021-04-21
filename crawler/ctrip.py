@@ -284,7 +284,7 @@ def crawl_flights(thread_id):
                         j += 1
                         break
                 if retry_count <= 0:
-                    print('\tDelete proxy:', proxy)
+                    # print('\tDelete proxy:', proxy)
                     delete_proxy(proxy)
                     exception += 1
                     # if 5 <= exception < 8:

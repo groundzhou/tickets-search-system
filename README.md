@@ -1,4 +1,4 @@
-# 机票元搜索及智能推荐系统 Ticket Meta Search and Recommendation System
+# 机票元搜索及智能推荐系统<br>Ticket Meta Search and Recommendation System
 
 ## 1. 机票数据爬虫（crawler）
 
@@ -60,7 +60,7 @@ Shell脚本导入 HDFS
 
 - `/airlines`
 - `/sites`
-- `/tickets?date=2021-4-30&source=BJS&d``````estination=CKG&sort=**`
+- `/tickets?date=2021-4-30&source=BJS&destination=CKG&sort=**`
 - `/users/<userid>` overview
 - `/users/<userid>?tab=**` tab: marks, 
 - `/cities` 城市列表
@@ -68,16 +68,30 @@ Shell脚本导入 HDFS
 
 ### 4.2 数据库设计
 
+机场
+城市
+航空公司
+航班
+机票
+供应商
+
 ## 5. 前端（frontend）
 
 框架：Vue
 
 ## 5.1 主页
 
-## 5.2 查询结果页
+搜索框+导航
+
+## 5.2 查询页
+
+条件查询
+列表
 
 ## 5.3 价格趋势
 
+价格变化图
+
 ## 5.4 飞去哪
 
-
+地图

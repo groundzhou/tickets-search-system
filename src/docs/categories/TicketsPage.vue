@@ -1,92 +1,104 @@
 <template>
-  <div style="margin-top: -15px">
-    <mdb-edge-header color="teal darken-2">
-      <div class="category-page-background"></div>
-    </mdb-edge-header>
-    <mdb-container class="free-bird">
-      <mdb-row>
-        <mdb-col md="8" class="mx-auto">
-          <mdb-jumbotron class="pt-4">
-            <h2 class="pb-4"><mdb-icon fab icon="css3" class="text-danger mr-2" /><strong>Tickets</strong></h2>
-            <h6 class="my-3">FREE</h6>
-            <mdb-list-group>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/animations">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Animations<mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/background">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Background Image<mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/gradient">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Gradient<mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/hover">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Hover effects<mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/icons">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Icons <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/masks">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Masks <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/masonry">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Masonry <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/scrollbar">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Scrollbar <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/table">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Table <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/table-additional">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Table Additional <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-              <mdb-nav-item class="list-group-item list-group-item-action" to="/css/table-responsive">
-                <h5 class="justify-content-between d-flex align-items-center">
-                  Table Responsive <mdb-icon icon="angle-right"/>
-                </h5>
-              </mdb-nav-item>
-            </mdb-list-group>
-          </mdb-jumbotron>
-        </mdb-col>
-      </mdb-row>
-    </mdb-container>
-  </div>
+  <mdb-container class="mt-5">
+    出发地
+    <el-select v-model="value" filterable placeholder="北京">
+      <el-option
+          v-for="item in options"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value">
+      </el-option>
+    </el-select>
+    目的地
+    <el-select v-model="value" filterable placeholder="昆明">
+      <el-option
+          v-for="item in options"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value">
+      </el-option>
+    </el-select>
+    出发日期
+    <el-date-picker
+        v-model="searchData.ddate"
+        type="date"
+        placeholder="选择出发日期">
+    </el-date-picker>
+
+    <section class="demo-section">
+      <h4>Basic example</h4>
+      <section>
+        <mdb-datatable :data="chartData" materialInputs responsive/>
+      </section>
+    </section>
+  </mdb-container>
 </template>
 
 <script>
-import { mdbContainer, mdbRow, mdbCol, mdbIcon, mdbJumbotron, mdbListGroup, mdbNavItem, mdbEdgeHeader } from 'mdbvue';
+import {
+  mdbDatatable,
+  mdbContainer
+} from 'mdbvue';
+
+const DATA_FROM_BACKEND = {
+  columns: [{
+    label: "Name",
+    field: "name",
+    sort: "asc"
+  }, {
+    label: "Position",
+    field: "position",
+    sort: "asc"
+  }, {
+    label: "Office",
+    field: "office",
+    sort: "asc"
+  }],
+  rows: [{
+    name: "Tiger Nixon",
+    position: "System Architect",
+    office: "Shanghai"
+  }, {
+    name: "Garrett Winters",
+    position: "Accountant",
+    office: "Tokyo",
+  }, {
+    name: "Ashton Cox",
+    position: "Junior Technical Author",
+    office: "San Francisco",
+  }]
+};
 
 export default {
-  name: 'CSSPage',
+  name: 'TicketsPage',
   components: {
-    mdbContainer,
-    mdbRow,
-    mdbCol,
-    mdbIcon,
-    mdbJumbotron,
-    mdbListGroup,
-    mdbNavItem,
-    mdbEdgeHeader
+    mdbDatatable,
+    mdbContainer
+  },
+  data() {
+    return {
+      searchData: {
+        ddate: "2021-05-01"
+      },
+      chartData: {
+        columns: [],
+        rows: []
+      }
+    }
+  },
+  created() {
+    this.getData();
+  },
+  methods: {
+    handleChange() {
+      this.getData();
+    },
+    getData() {
+      this.chartData = {
+        columns: DATA_FROM_BACKEND.columns,
+        rows: DATA_FROM_BACKEND.rows
+      };
+    }
   }
 };
 </script>
