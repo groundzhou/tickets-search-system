@@ -22,6 +22,7 @@ update() {
 
 proxypool() {
   if [ "$1" = "start" ]; then
+    echo "ground" | sudo -S systemctl start redis
     cd "$base_dir"/proxy_pool-master || exit
 
     if [[ -f 1.pid ]]; then
@@ -31,9 +32,9 @@ proxypool() {
       kill -9 $(cat 2.pid)
     fi
 
-    python proxyPool.py server > /dev/null 2>&1 &
+    python3.9 proxyPool.py server > /dev/null 2>&1 &
     echo $! > 1.pid
-    python proxyPool.py schedule > /dev/null 2>&1 &
+    python3.9 proxyPool.py schedule > /dev/null 2>&1 &
     echo $! > 2.pid
   fi
 
@@ -43,6 +44,10 @@ proxypool() {
     kill -9 $(cat 2.pid)
     rm 1.pid
     rm 2.pid
+    echo "ground" | sudo -S systemctl stop redis
+
+    cd "$base_dir"/tickets-search-system/data || exit
+    cp checkpoints checkpoints.json
   fi
 
   exit 0
@@ -50,7 +55,7 @@ proxypool() {
 
 crawl() {
   cd "$base_dir"/"$project_name"/crawler || exit
-  python ./ctrip.py
+  python3.9 ./ctrip.py
 
   exit 0
 }

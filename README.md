@@ -41,6 +41,8 @@ Shell脚本导入 HDFS
 模型选择：Regression Tree
 神经网络算法，树形算法，决策树，回归决策树
 
+决策树：回归树，CART，GINI指数，交叉验证
+
 可选features
 - 出发日期
 - 航空公司
@@ -48,6 +50,8 @@ Shell脚本导入 HDFS
 - 是否节假日
 - 距出发日多少天
 - 原价（折扣）
+
+实现：PySpark，MlLib
 
 ### 3.2 何时买
 

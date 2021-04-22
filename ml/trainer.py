@@ -1,15 +1,9 @@
 from pyspark import SparkContext
+from pyspark.sql import Row, SQLContext, SparkSession, HiveContext
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
-from pyspark.mllib.util import MLUtils
 
-if __name__ == "__main__":
-    sc = SparkContext(
-        master='spark://hadoop-1:7077',
-        appName='DecisionTreeRegressionTest',
-        sparkHome='/home/ground/bigdata/spark',
-    )
 
-    data = MLUtils.loadLibSVMFile(sc, '/user/ground/sample_libsvm_data.txt')
+def train(data):
     trainingData, testData = data.randomSplit([0.7, 0.3])
 
     """
@@ -34,4 +28,18 @@ if __name__ == "__main__":
 
     # Save and load model
     model.save(sc, "target/myDecisionTreeRegressionModel")
-    sameModel = DecisionTreeModel.load(sc, "target/myDecisionTreeRegressionModel")
+    # sameModel = DecisionTreeModel.load(sc, "target/myDecisionTreeRegressionModel")
+
+
+if __name__ == "__main__":
+    sc = SparkContext(
+        master='spark://hadoop-1:7077',
+        appName='DecisionTreeRegressionTest',
+        sparkHome='/home/ground/bigdata/spark',
+    )
+
+    sqlContext = HiveContext(sc)
+    sqlContext.sql('use flight')
+    df = sqlContext.sql('select * from bjs_kmg_2 limit 10')
+    df.printSchema()
+    sc.stop()

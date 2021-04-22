@@ -69,3 +69,34 @@ CREATE EXTERNAL TABLE bjs_kmg
     ddate         STRING
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
     STORED AS TEXTFILE LOCATION '/warehouse/bjs_kmg/';
+
+-- 2019年北京至昆明数据
+DROP TABLE IF EXISTS flight.bjs_kmg_2;
+CREATE EXTERNAL TABLE flight.bjs_kmg_2
+(
+    airline  STRING,
+    ddate    STRING,
+    ahead    INT,
+    dtime    INT,
+    atime    INT,
+    discount DOUBLE,
+    price    INT
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE LOCATION '/warehouse/bjs_kmg_2/';
+
+insert overwrite table flight.bjs_kmg_2
+select substr(flight_num, 0, 2), ddate, ahead, hour(dtime), hour(atime), discount, price
+from flight.bjs_kmg;
+
+
+CREATE EXTERNAL TABLE test
+(
+    airline  STRING,
+    ddate    STRING,
+    ahead    INT,
+    dtime    INT,
+    atime    INT,
+    discount DOUBLE,
+    price    INT
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE LOCATION '/warehouse/test/';
