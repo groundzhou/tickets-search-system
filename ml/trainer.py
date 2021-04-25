@@ -1,34 +1,60 @@
 from pyspark import SparkContext
-from pyspark.sql import Row, SQLContext, SparkSession, HiveContext
-from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
+from pyspark.ml import Pipeline
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.feature import RFormula
+from pyspark.ml.regression import DecisionTreeRegressor
+from pyspark.sql import HiveContext
 
 
-def train(data):
-    trainingData, testData = data.randomSplit([0.7, 0.3])
-
+def train1(spark_config):
     """
-    参数：
-        data：pyspark.rdd of LabeledPoint, 标签是实数
-        categoricalFeaturesInfodict: Map storing arity of categorical features.
-            An entry (n -> k) indicates that feature n is categorical with k categories indexed from 0: {0, 1, …, k-1}.
-        maxDepth: 树深度，默认5
-        maxBins: Number of bins used for finding splits at each node. (default: 32)
-        minInstancesPerNodeint: Minimum number of instances required at child nodes to create the parent split. (default: 1)
-        minInfoGainfloat: Minimum info gain required to create a split. (default: 0.0)
+    todo: 调整参数
     """
-    model = DecisionTree.trainRegressor(trainingData, categoricalFeaturesInfo={}, maxDepth=5,
-                                        maxBins=32)
+    # 1. 从Hive导入数据
+    sql_context = HiveContext(spark_config)
+    data = sql_context.sql('select * from flight.bjs_kmg_2')
 
-    predictions = model.predict(testData.map(lambda x: x.features))
-    labelsAndPredictions = testData.map(lambda lp: lp.label).zip(predictions)
-    testMSE = labelsAndPredictions.map(lambda lp: (lp[0] - lp[1]) * (lp[0] - lp[1])).sum() / float(testData.count())
-    print('Test Mean Squared Error = ' + str(testMSE))
-    print('Learned regression tree model:')
-    print(model.toDebugString())
+    # 2. 查看数据类型，预览数据
+    # df.printSchema()
+    # df.show(3)
 
-    # Save and load model
-    model.save(sc, "target/myDecisionTreeRegressionModel")
-    # sameModel = DecisionTreeModel.load(sc, "target/myDecisionTreeRegressionModel")
+    # 3. 插补删除缺失值
+    data.na.drop('any')
+
+    # 4. 分析数值特征
+    # 5. 分析分类特征
+    # 6. 将分类变量转换为标签
+    # airlineIndexer = StringIndexer(inputCol='airline', outputCol='indexedAirline').fit(df)
+    # df1 = airlineIndexer.transform(df)
+    # df1.show(3)
+
+    # 7. 特征化并构建模型 R模型公式
+    formula = RFormula(formula='discount ~ airline + dmonth + dday + dweek + dhour + ahour + ahead').fit(data)
+
+    # 8. 建立机器学习模型并训练
+    (training_data, test_data) = data.randomSplit([0.7, 0.3])
+    dt = DecisionTreeRegressor(maxDepth=20, maxBins=32, maxMemoryInMB=2048)
+    pipeline = Pipeline(stages=[formula, dt])
+
+    # 训练模型
+    model = pipeline.fit(training_data)
+
+    # 预测
+    predictions = model.transform(test_data)
+    predictions.select("prediction", "label", "features").show(5)
+
+    # 计算RMSE，验证效果
+    evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+    rmse = evaluator.evaluate(predictions)
+    print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
+    print(model.stages[1])
+
+
+def train2(spark_config):
+    """
+    todo: 预测最低价
+    """
+    pass
 
 
 if __name__ == "__main__":
@@ -38,8 +64,5 @@ if __name__ == "__main__":
         sparkHome='/home/ground/bigdata/spark',
     )
 
-    sqlContext = HiveContext(sc)
-    sqlContext.sql('use flight')
-    df = sqlContext.sql('select * from bjs_kmg_2 limit 10')
-    df.printSchema()
+    train1(sc)
     sc.stop()

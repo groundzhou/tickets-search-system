@@ -8,6 +8,7 @@ help() {
     -h --help       帮助文档
     -u --update     更新远程文件
     -c --crawl      爬取数据
+    -e --env        启动大数据环境
 EOF
   exit 0
 }
@@ -60,17 +61,31 @@ crawl() {
   exit 0
 }
 
-run() {
-  exit 0
+hadoop() {
+  if [ "$1" = "start" ]; then
+    echo "ground" | sudo -S systemctl start postgresql
+    start-dfs.sh
+    start-yarn.sh
+    start-history-server.sh
+    start-spark.sh
+  fi
+
+  if [ "$1" = "stop" ]; then
+    stop-spark.sh
+    stop-history-server.sh
+    stop-yarn.sh
+    stop-dfs.sh
+    echo "ground" | sudo -S systemctl stop postgresql
+  fi
 }
 
 if [ -n "$1" ]; then #这里通过判断$1是否存在
   case $1 in
   -h | --help) help ;;
-  -u | --update) update;;
+  -u | --update) update ;;
   -p | --proxypool) proxypool "$2" ;;
   -c | --crawl) crawl ;;
-  -r | --run) run ;;
+  -e | --env) hadoop "$2" ;;
   esac
 else
   help

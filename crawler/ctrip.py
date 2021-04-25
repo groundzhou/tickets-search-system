@@ -188,7 +188,7 @@ def request(source, destination, date, proxy):
                'TE': 'Trailers'}
 
     try:
-        response = s.post(url=url, headers=headers, json=j, timeout=10, proxies={"https": "http://{}".format(proxy)})
+        response = s.post(url=url, headers=headers, json=j, timeout=7, proxies={"https": "http://{}".format(proxy)})
         fltitem = json.loads(response.text).get('fltitem', None)
         flights = []
         if fltitem:
@@ -269,15 +269,15 @@ def crawl_flights(thread_id):
                         lock.release()
                     except IPBlockedException:
                         print('%s: IP Blocked\t%s\t%s %s --> %s %s\n' %
-                              (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
+                              (threading.current_thread().name, d, i, cities[i], j, cities[j]), end='')
                         retry_count -= 1
                     except TimeoutException:
                         print('%s: Time Out\t%s\t%s %s --> %s %s\n' %
-                              (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
+                              (threading.current_thread().name, d, i, cities[i], j, cities[j]), end='')
                         retry_count -= 1
                     except:
                         print('%s: Other Error\t%s\t%s %s --> %s %s\n' %
-                              (threading.current_thread().name, dates[d], i, cities[i], j, cities[j]), end='')
+                              (threading.current_thread().name, d, i, cities[i], j, cities[j]), end='')
                         retry_count -= 1
                     else:
                         exception = 0
@@ -287,10 +287,9 @@ def crawl_flights(thread_id):
                     # print('\tDelete proxy:', proxy)
                     delete_proxy(proxy)
                     exception += 1
-                    # if 5 <= exception < 8:
-                    #     time.sleep(5)
-                    # el
-                    if exception >= 8:
+                    if 5 <= exception < 8:
+                        time.sleep(4)
+                    elif exception >= 8:
                         lock.acquire()
                         save_point('flights', [d, i, j], thread_id)
                         lock.release()
