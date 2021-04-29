@@ -100,14 +100,29 @@ select substr(flight_num, 0, 2),
 from flight.bjs_kmg;
 
 
--- CREATE EXTERNAL TABLE test
--- (
---     airline  STRING,
---     ddate    STRING,
---     ahead    INT,
---     dtime    INT,
---     atime    INT,
---     discount DOUBLE,
---     price    INT
--- ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
---     STORED AS TEXTFILE LOCATION '/warehouse/test/';
+DROP TABLE IF EXISTS flight.bjs_kmg_3;
+CREATE EXTERNAL TABLE flight.bjs_kmg_3
+(
+    airline  STRING,
+    dmonth   INT,
+    dday     INT,
+    dweek    INT,
+    dhour    INT,
+    ahour    INT,
+    ahead    INT,
+    discount DOUBLE,
+    price    INT
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE LOCATION '/warehouse/bjs_kmg_3/';
+
+insert overwrite table flight.bjs_kmg_3
+select substr(flight_num, 0, 2),
+       month(ddate),
+       day(ddate),
+       dayofweek(ddate),
+       hour(dtime),
+       hour(atime),
+       ahead,
+       discount,
+       price
+from flight.bjs_kmg;

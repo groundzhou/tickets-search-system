@@ -1,5 +1,10 @@
--- 城市列表
+DROP TABLE IF EXISTS ground.ticket;
+DROP TABLE IF EXISTS ground.provider;
+DROP TABLE IF EXISTS ground.airline;
+DROP TABLE IF EXISTS ground.airport;
 DROP TABLE IF EXISTS ground.city;
+
+-- 城市列表
 CREATE TABLE ground.city
 (
     id   serial PRIMARY KEY NOT NULL,
@@ -8,7 +13,6 @@ CREATE TABLE ground.city
 );
 
 -- 机场列表
-DROP TABLE IF EXISTS ground.airport;
 CREATE TABLE ground.airport
 (
     id        serial PRIMARY KEY,
@@ -18,7 +22,6 @@ CREATE TABLE ground.airport
 );
 
 -- 航空公司
-DROP TABLE IF EXISTS ground.airline;
 CREATE TABLE ground.airline
 (
     id   serial PRIMARY KEY,
@@ -27,7 +30,6 @@ CREATE TABLE ground.airline
 );
 
 -- 机票信息
-DROP TABLE IF EXISTS ground.ticket;
 CREATE TABLE ground.ticket
 (
     id            serial PRIMARY KEY,
@@ -47,7 +49,6 @@ CREATE TABLE ground.ticket
 );
 
 -- 供应商
-DROP TABLE IF EXISTS ground.provider;
 CREATE TABLE ground.provider
 (
     id        serial PRIMARY KEY NOT NULL,

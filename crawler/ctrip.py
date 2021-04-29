@@ -188,7 +188,7 @@ def request(source, destination, date, proxy):
                'TE': 'Trailers'}
 
     try:
-        response = s.post(url=url, headers=headers, json=j, timeout=7, proxies={"https": "http://{}".format(proxy)})
+        response = s.post(url=url, headers=headers, json=j, timeout=10)#, proxies={"https": "http://{}".format(proxy)})
         fltitem = json.loads(response.text).get('fltitem', None)
         flights = []
         if fltitem:
@@ -259,7 +259,7 @@ def crawl_flights(thread_id):
                     j += 1
                     continue
                 retry_count = 1  # 重复1次
-                proxy = get_proxy().get("proxy")
+                proxy = None  # get_proxy().get("proxy")
                 while retry_count > 0:
                     try:
                         flights = request(cities[i], cities[j], dates[d], proxy)
@@ -285,7 +285,7 @@ def crawl_flights(thread_id):
                         break
                 if retry_count <= 0:
                     # print('\tDelete proxy:', proxy)
-                    delete_proxy(proxy)
+                    # delete_proxy(proxy)
                     exception += 1
                     if 5 <= exception < 8:
                         time.sleep(4)

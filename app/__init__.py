@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, render_template
 
 
 def cors(res):
@@ -34,14 +34,19 @@ def create_app(test_config=None):
     from app.database import init_app
     init_app(app)
 
-    # a simple page that test api
+    # api doc page
     @app.route('/')
-    def test():
-        return app.send_static_file('index.html')
+    def api():
+        urls = []
+        for rule in app.url_map.iter_rules():
+            if rule.endpoint not in ['static', 'api']:
+                urls.append(rule)
+        return render_template('index.html', urls=urls)
 
     # register blueprints
-    from app.resources import cities
+    from app.resources import cities, tickets
     app.register_blueprint(cities.bp)
+    app.register_blueprint(tickets.bp)
 
     # 解决跨域问题
     app.after_request(cors)
