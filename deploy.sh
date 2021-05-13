@@ -5,19 +5,18 @@ base_dir="/home/ground/projects"
 
 help() {
   cat <<-EOF
-    -h --help       帮助文档
-    -u --update     更新远程文件
-    -c --crawl      爬取数据
-    -e --env        启动大数据环境
+    -h --help                   帮助文档
+    -p --proxypool [start|stop] 开启/关闭 IP代理池
+    -c --crawl                  爬取数据
+    -e --env [start|stop]       启动/关闭 大数据环境
+    -u --update                 更新数据库
 EOF
   exit 0
 }
 
 update() {
-  scp -r ./crawler hadoop-2:~/projects/tickets-search-system/
-  scp -r ./raw_data/checkpoints.json \
-    ./raw_data/mainCities.json \
-    hadoop-2:~/projects/tickets-search-system/raw_data
+  cd "$base_dir"/"$project_name"/instance || exit
+  source "$base_dir"/"$project_name"/scripts/update.sh
   exit 0
 }
 
