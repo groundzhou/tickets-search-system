@@ -34,7 +34,7 @@
             ></mdb-nav-item>
           </mdb-tooltip>
           <mdb-tooltip>
-            <span slot="tip">FREE</span>
+            <span slot="tip">注册</span>
             <mdb-nav-item
                 slot="reference"
                 href="https://mdbootstrap.com/docs/vue/getting-started/download/"
