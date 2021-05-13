@@ -25,8 +25,8 @@ CREATE TABLE ground.airport
 CREATE TABLE ground.airline
 (
     id   serial PRIMARY KEY,
-    name varchar(120) NOT NULL,
-    code char(2)      NOT NULL UNIQUE
+    code char(2) NOT NULL UNIQUE,
+    name varchar(120) NOT NULL
 );
 
 -- 机票信息
@@ -56,3 +56,9 @@ CREATE TABLE ground.provider
     site      varchar(240),
     icon_path varchar(240)
 );
+
+-- 最低价
+CREATE TABLE ground.price
+(
+
+)

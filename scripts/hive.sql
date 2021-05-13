@@ -100,29 +100,51 @@ select substr(flight_num, 0, 2),
 from flight.bjs_kmg;
 
 
-DROP TABLE IF EXISTS flight.bjs_kmg_3;
-CREATE EXTERNAL TABLE flight.bjs_kmg_3
+DROP TABLE IF EXISTS flight.ads_ticket;
+CREATE EXTERNAL TABLE flight.ads_ticket
 (
-    airline  STRING,
-    dmonth   INT,
-    dday     INT,
-    dweek    INT,
-    dhour    INT,
-    ahour    INT,
-    ahead    INT,
-    discount DOUBLE,
-    price    INT
+    dairport_code STRING,
+    ddate         STRING,
+    dtime         STRING,
+    aairport_code STRING,
+    adate         STRING,
+    atime         STRING,
+    airline_code  STRING,
+    aircraft      STRING,
+    aircraft_type STRING,
+    price         INT,
+    discount      DOUBLE,
+    class         STRING,
+    cdate         STRING
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
-    STORED AS TEXTFILE LOCATION '/warehouse/bjs_kmg_3/';
+    STORED AS TEXTFILE LOCATION '/warehouse/ads-ticket/';
 
-insert overwrite table flight.bjs_kmg_3
-select substr(flight_num, 0, 2),
-       month(ddate),
-       day(ddate),
-       dayofweek(ddate),
-       hour(dtime),
-       hour(atime),
-       ahead,
+insert overwrite table flight.ads_ticket
+select dairport_code,
+       to_date(dtime),
+       substr(dtime, 12, 8),
+       aairport_code,
+       to_date(atime),
+       substr(atime, 12, 8),
+       airline_code,
+       concat(plane, plane_code),
+       plane_kind,
+       price,
        discount,
-       price
-from flight.bjs_kmg;
+       class,
+       cdate
+from flight.dws_flight
+where cdate = current_date();
+
+DROP TABLE IF EXISTS flight.ads_airline;
+CREATE EXTERNAL TABLE flight.ads_airline
+(
+    code    STRING,
+    name    STRING
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE LOCATION '/warehouse/ads-airline/';
+
+insert overwrite table flight.ads_airline
+select distinct airline_code,
+       airline
+from flight.dws_flight;

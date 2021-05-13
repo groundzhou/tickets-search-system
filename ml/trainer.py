@@ -59,7 +59,7 @@ def train2(spark_config):
 
 if __name__ == "__main__":
     sc = SparkContext(
-        master='spark://hadoop-1:7077',
+        master='spark://localhost:7077',
         appName='DecisionTreeRegressionTest',
         sparkHome='/home/ground/bigdata/spark',
     )

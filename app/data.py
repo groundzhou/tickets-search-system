@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.7
+
 import json
 import psycopg2
 
@@ -17,7 +19,7 @@ def get_db():
     return db
 
 
-def insert_data():
+def insert_city_data():
     city_file_path = '/home/ground/projects/tickets-search-system/data/mainCities.json'
 
     db = get_db()
@@ -29,6 +31,20 @@ def insert_data():
 
     db.commit()
     db.close()
+
+
+def insert_provider_data():
+    db = get_db()
+    with db.cursor() as cur:
+        cur.execute('INSERT INTO ground.provider (name, site, icon_path) VALUES (%s, %s, %s)',
+                    ('携程', 'https://ctrip.com', 'https://www.ctrip.com/favicon.ico'))
+
+    db.commit()
+    db.close()
+
+
+def insert_data():
+    pass
 
 
 if __name__ == '__main__':

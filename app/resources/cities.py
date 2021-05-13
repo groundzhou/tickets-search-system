@@ -33,7 +33,7 @@ def city(city_code):
     if request.method == 'GET':
         db = get_db()
         with db.cursor() as cur:
-            cur.execute('SELECT * FROM ground.city WHERE code=%s', city_code)
+            cur.execute('SELECT id, name, code FROM ground.city WHERE code=%s', (city_code,))
             result = cur.fetchall()
 
         return jsonify(result)
