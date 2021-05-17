@@ -15,8 +15,16 @@ def cities():
     if request.method == 'GET':
         db = get_db()
         with db.cursor() as cur:
-            cur.execute('SELECT id, name, code FROM ground.city')
+            cur.execute(
+                '''SELECT distinct c.id, c.name, c.code
+                FROM ground.city c, ground.airport a
+                WHERE c.code = a.city_code
+                ORDER BY c.id'''
+            )
             result = cur.fetchall()
+            # for city in result:
+            #     cur.execute('select name, code from ground.airport where city_code = %s', (city['code'],))
+            #     city['airports'] = cur.fetchall()
         return jsonify(result)
 
     if request.method == 'POST':

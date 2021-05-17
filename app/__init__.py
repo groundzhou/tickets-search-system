@@ -44,11 +44,12 @@ def create_app(test_config=None):
         return render_template('index.html', urls=urls)
 
     # register blueprints
-    from app.resources import cities, airports, tickets, providers
-    app.register_blueprint(cities.bp)
-    app.register_blueprint(tickets.bp)
+    from app.resources import airlines, airports, cities, providers, tickets
+    app.register_blueprint(airlines.bp)
     app.register_blueprint(airports.bp)
+    app.register_blueprint(cities.bp)
     app.register_blueprint(providers.bp)
+    app.register_blueprint(tickets.bp)
 
     # 解决跨域问题
     app.after_request(cors)

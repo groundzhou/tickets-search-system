@@ -13,11 +13,15 @@ if [[ -f "$base_dir"/data/flights.csv ]]; then
   mv "$base_dir"/data/flights.csv "$base_dir"/data/flights/"$filename"
   echo "文件上传成功：flights.csv >> $filename"
 
+  hadoop fs -rm /warehouse/ads-ticket/'*'
   hive -e \
     "insert overwrite table flight.ads_ticket
-      select dairport_code,
+      select flight_num,
+      dcity_code,
+      dairport_code,
       to_date(dtime),
       substr(dtime, 12, 8),
+      acity_code,
       aairport_code,
       to_date(atime),
       substr(atime, 12, 8),
@@ -37,9 +41,12 @@ if [[ -f "$base_dir"/data/flights.csv ]]; then
     --password $db_password \
     --table ticket \
     --columns \
-      "dairport_code,
+      "flight_num,
+      dcity_code,
+      dairport_code,
       ddate,
       dtime,
+      acity_code,
       aairport_code,
       adate,
       atime,
