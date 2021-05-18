@@ -71,5 +71,38 @@ if [[ -f "$base_dir"/data/prices.csv ]]; then
   mv "$base_dir"/data/prices.csv "$base_dir"/data/prices/"$filename"
   echo "文件上传成功：prices.csv >> $filename"
 else
+  hadoop fs -rm /warehouse/ads-price/'*'
+  hive -e \
+    "insert overwrite table flight.ads_price
+    select dcity_code,
+      acity_code,
+      ddate,
+      day,
+      price,
+      substr(flight_num, 0, 6),
+      airline_code,
+      airline,
+      cdate
+    from flight.dws_price
+    where cdate = current_date();"
+
+  /home/ground/bigdata/sqoop/bin/sqoop export \
+    --connect $db_url \
+    --username $db_username \
+    --password $db_password \
+    --table low_price \
+    --columns \
+      "dcity_code,
+      acity_code,
+      ddate,
+      day,
+      price,
+      flight_num,
+      airline_code,
+      airline,
+      cdate" \
+    --export-dir "hdfs://localhost:9000/warehouse/ads-price" \
+    --input-fields-terminated-by ','
+
   echo "文件 prices.csv 不存在"
 fi

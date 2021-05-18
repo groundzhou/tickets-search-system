@@ -44,10 +44,11 @@ def create_app(test_config=None):
         return render_template('index.html', urls=urls)
 
     # register blueprints
-    from app.resources import airlines, airports, cities, providers, tickets
+    from app.resources import airlines, airports, cities, prices, providers, tickets
     app.register_blueprint(airlines.bp)
     app.register_blueprint(airports.bp)
     app.register_blueprint(cities.bp)
+    app.register_blueprint(prices.bp)
     app.register_blueprint(providers.bp)
     app.register_blueprint(tickets.bp)
 
