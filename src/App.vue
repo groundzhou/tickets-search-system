@@ -11,16 +11,16 @@
         scrolling
         :scrollingOffset="20">
 
-      <mdb-navbar-brand to="/" waves class="font-weight-bold">Tickets Search</mdb-navbar-brand>
+      <mdb-navbar-brand to="/" waves class="font-weight-bold">机票查询系统</mdb-navbar-brand>
       <mdb-navbar-toggler>
         <mdb-navbar-nav right>
           <mdb-nav-item to="/tickets">
             <strong>机票</strong>
           </mdb-nav-item>
-          <mdb-nav-item to="/advanced">
+          <mdb-nav-item to="/prices">
             <strong>何时飞</strong>
           </mdb-nav-item>
-          <mdb-nav-item to="/components">
+          <mdb-nav-item to="/cities">
             <strong>飞去哪</strong>
           </mdb-nav-item>
           <mdb-tooltip>
@@ -31,15 +31,6 @@
                 newTab
                 far
                 icon="gem"
-            ></mdb-nav-item>
-          </mdb-tooltip>
-          <mdb-tooltip>
-            <span slot="tip">注册</span>
-            <mdb-nav-item
-                slot="reference"
-                href="https://mdbootstrap.com/docs/vue/getting-started/download/"
-                newTab
-                icon="download"
             ></mdb-nav-item>
           </mdb-tooltip>
         </mdb-navbar-nav>

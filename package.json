@@ -1,7 +1,7 @@
 {
   "name": "tickets-search-system",
   "version": "6.7.2",
-  "description": "Tickets Meta Search APP",
+  "description": "Tickets search APP",
   "author": "Ground Zhou",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -12,12 +12,13 @@
     "start": "vue-cli-service serve --open"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "core-js": "^3.1.2",
     "element-ui": "^2.15.1",
     "mdbvue": "^6.7.2",
     "vee-validate": "^3.2.0",
     "vue": "^2.6.11",
+    "vue-axios": "^3.2.4",
     "vue-router": "^3.1.3",
     "vuex": "^3.1.2"
   },

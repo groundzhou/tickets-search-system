@@ -31,10 +31,9 @@ CREATE EXTERNAL TABLE dws_flight
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
     STORED AS TEXTFILE LOCATION '/warehouse/dws-flight/';
 
-
 -- 最低票价
-DROP TABLE IF EXISTS dws_price;
-CREATE EXTERNAL TABLE dws_price
+DROP TABLE IF EXISTS flight.dws_price;
+CREATE EXTERNAL TABLE flight.dws_price
 (
     dcity_code   STRING,
     acity_code   STRING,
@@ -49,6 +48,9 @@ CREATE EXTERNAL TABLE dws_price
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
     STORED AS TEXTFILE LOCATION '/warehouse/dws-price/';
 
+-------------------
+-- 机器学习数据分析 --
+-------------------
 
 -- 2019年北京至昆明数据
 DROP TABLE IF EXISTS bjs_kmg;
@@ -99,13 +101,20 @@ select substr(flight_num, 0, 2),
        price
 from flight.bjs_kmg;
 
+---------
+-- ADS --
+---------
 
+-- tickets
 DROP TABLE IF EXISTS flight.ads_ticket;
 CREATE EXTERNAL TABLE flight.ads_ticket
 (
+    flight_num    STRING,
+    dcity_code    STRING,
     dairport_code STRING,
     ddate         STRING,
     dtime         STRING,
+    acity_code    STRING,
     aairport_code STRING,
     adate         STRING,
     atime         STRING,
@@ -120,9 +129,12 @@ CREATE EXTERNAL TABLE flight.ads_ticket
     STORED AS TEXTFILE LOCATION '/warehouse/ads-ticket/';
 
 insert overwrite table flight.ads_ticket
-select dairport_code,
+select flight_num,
+       dcity_code,
+       dairport_code,
        to_date(dtime),
        substr(dtime, 12, 8),
+       acity_code,
        aairport_code,
        to_date(atime),
        substr(atime, 12, 8),
@@ -136,6 +148,7 @@ select dairport_code,
 from flight.dws_flight
 where cdate = current_date();
 
+-- airlines
 DROP TABLE IF EXISTS flight.ads_airline;
 CREATE EXTERNAL TABLE flight.ads_airline
 (
@@ -148,3 +161,33 @@ insert overwrite table flight.ads_airline
 select distinct airline_code,
        airline
 from flight.dws_flight;
+
+
+-- low prices
+DROP TABLE IF EXISTS flight.ads_price;
+CREATE EXTERNAL TABLE flight.ads_price
+(
+    dcity_code   STRING,
+    acity_code   STRING,
+    ddate        STRING,
+    day          INT,
+    price        INT,
+    flight_num   STRING,
+    airline_code STRING,
+    airline      STRING,
+    cdate        STRING
+) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE LOCATION '/warehouse/ads-price/';
+
+insert overwrite table flight.ads_price
+select dcity_code,
+      acity_code,
+      ddate,
+      day,
+      price,
+      substr(flight_num, 0, 6),
+      airline_code,
+      airline,
+      cdate
+from flight.dws_price
+where cdate = current_date();

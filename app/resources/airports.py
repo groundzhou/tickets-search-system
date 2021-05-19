@@ -11,12 +11,14 @@ def airports():
     """
     if request.method == 'GET':
         db = get_db()
+        airport_dict = {}
         with db.cursor() as cur:
-            cur.execute('''SELECT a.id, a.name, a.code, a.city_code, c.name city_name
-                           FROM ground.airport a, ground.city c 
-                           WHERE a.city_code = c.code''')
-            result = cur.fetchall()
-        return jsonify(result)
+            cur.execute('''SELECT name, code
+                           FROM ground.airport''')
+            airport_list = cur.fetchall()
+            for i in airport_list:
+                airport_dict[i['code']] = i['name']
+        return jsonify(dict=airport_dict, list=airport_list)
 
     if request.method == 'POST':
         return 'ok'

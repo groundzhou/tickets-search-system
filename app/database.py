@@ -50,7 +50,7 @@ def drop_db_command():
     """Clear all tables."""
     db = get_db()
     with db.cursor() as cur:
-        cur.execute('DROP TABLE IF EXISTS test;')
+        cur.execute('DROP TABLE IF EXISTS test')
     db.commit()
     click.echo('Drop all tables.')
 

@@ -1,5 +1,5 @@
 from pyspark import SparkContext
-from pyspark.ml import Pipeline
+from pyspark.ml import Pipeline, PipelineModel
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import RFormula
 from pyspark.ml.regression import DecisionTreeRegressor
@@ -7,9 +7,6 @@ from pyspark.sql import HiveContext
 
 
 def train1(spark_config):
-    """
-    todo: 调整参数
-    """
     # 1. 从Hive导入数据
     sql_context = HiveContext(spark_config)
     data = sql_context.sql('select * from flight.bjs_kmg_2')
@@ -30,10 +27,10 @@ def train1(spark_config):
 
     # 7. 特征化并构建模型 R模型公式
     formula = RFormula(formula='discount ~ airline + dmonth + dday + dweek + dhour + ahour + ahead').fit(data)
-
+    #formula = RFormula(formula='price ~ airline + dmonth + dday + dweek + dhour + ahour + ahead').fit(data)
     # 8. 建立机器学习模型并训练
     (training_data, test_data) = data.randomSplit([0.7, 0.3])
-    dt = DecisionTreeRegressor(maxDepth=20, maxBins=32, maxMemoryInMB=2048)
+    dt = DecisionTreeRegressor(maxDepth=20, maxBins=32, maxMemoryInMB=256)
     pipeline = Pipeline(stages=[formula, dt])
 
     # 训练模型
@@ -41,13 +38,15 @@ def train1(spark_config):
 
     # 预测
     predictions = model.transform(test_data)
-    predictions.select("prediction", "label", "features").show(5)
+    predictions.select("prediction", "label", "features").show(10)
 
     # 计算RMSE，验证效果
     evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
     rmse = evaluator.evaluate(predictions)
     print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
     print(model.stages[1])
+
+    model.save('/spark/bjs_kmg_discount_dt.model')
 
 
 def train2(spark_config):
@@ -57,6 +56,29 @@ def train2(spark_config):
     pass
 
 
+def test(spark_config):
+    sql_context = HiveContext(spark_config)
+    data = sql_context.sql('select * from flight.bjs_kmg_2')
+
+    # formula = RFormula(formula='price ~ airline + dmonth + dday + dweek + dhour + ahour + ahead').fit(data)
+    #
+    # dt = DecisionTreeRegressor(maxDepth=23, maxBins=32, maxMemoryInMB=256)
+    # pipeline = Pipeline(stages=[formula, dt])
+
+    # 训练模型
+    model = PipelineModel.load('/spark/bjs_kmg_discount_dt.model')
+
+    # 预测
+    predictions = model.transform(data)
+    predictions.select("prediction", "label", "features").show(10)
+
+    # 计算RMSE，验证效果
+    evaluator = RegressionEvaluator(labelCol="label", predictionCol="prediction", metricName="rmse")
+    rmse = evaluator.evaluate(predictions)
+    print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
+    print(model.stages[1])
+
+
 if __name__ == "__main__":
     sc = SparkContext(
         master='spark://localhost:7077',
@@ -64,5 +86,6 @@ if __name__ == "__main__":
         sparkHome='/home/ground/bigdata/spark',
     )
 
-    train1(sc)
+    test(sc)
+    #train1(sc)
     sc.stop()

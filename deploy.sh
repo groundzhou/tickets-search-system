@@ -16,7 +16,7 @@ EOF
 
 update() {
   cd "$base_dir"/"$project_name"/instance || exit
-  source "$base_dir"/"$project_name"/scripts/update.sh
+  exec "$base_dir"/"$project_name"/scripts/update.sh
   exit 0
 }
 

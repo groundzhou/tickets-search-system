@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import HomePage from '../docs/HomePage'
-import TicketsPage from "../docs/categories/TicketsPage";
-import ComponentsPage from "../docs/categories/ComponentsPage";
-import AdvancedPage from "../docs/categories/AdvancedPage";
+import HomePage from '../pages/HomePage'
+import TicketsPage from "../pages/TicketsPage";
+import PricesPage from "../pages/PricesPage"
+import CitiesPage from "../pages/CitiesPage"
+import TicketDetailPage from "../pages/TicketDetailPage"
 
 Vue.use(Router)
 
@@ -21,12 +22,16 @@ export default new Router({
       name: 'TicketsPage',
       component: TicketsPage
     }, {
-      path: '/components',
-      name: 'ComponentsPage',
-      component: ComponentsPage
+      path: '/prices',
+      name: 'PricesPage',
+      component: PricesPage
     }, {
-      path: '/advanced',
-      name: 'AdvancedPage',
-      component: AdvancedPage
+      path: '/cities',
+      name: 'CitiesPage',
+      component: CitiesPage
+    },{
+      path: '/tickets/:id',
+      name: 'TicketDetailPage',
+      component: TicketDetailPage
     },]
 })
