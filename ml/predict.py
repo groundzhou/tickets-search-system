@@ -41,8 +41,8 @@ def predict_bjs_kmg(sc):
     with db.cursor() as cur:
         cur.execute('''select *
                        from ground.ticket 
-                       where dcity_code=%s and acity_code=%s and cdate=%s and ddate=%s''',
-                    ('BJS', 'KMG', date.today(), date.today() + timedelta(47)))
+                       where dcity_code=%s and acity_code=%s and cdate=%s''',
+                    ('BJS', 'KMG', date.today()))
         result = cur.fetchall()
 
     keys = ['tid', 'airline', 'dmonth', 'dday', 'dweek', 'dhour', 'ahour', 'ahead']
@@ -60,6 +60,19 @@ def predict_bjs_kmg(sc):
 
     data = spark.createDataFrame(features, schema)
     predictions = model.transform(data).collect()
+
+    with db.cursor() as cur:
+        cur.execute('DROP TABLE IF EXISTS ground.bjs_kmg_price')
+        cur.execute(
+            '''CREATE TABLE ground.bjs_kmg_price
+               (
+                    id         serial PRIMARY KEY NOT NULL,
+                    ticket_id  int4,
+                    price      float4,
+                    cdate      date
+                )'''
+        )
+    db.commit()
 
     with db.cursor() as cur:
         for row in predictions:

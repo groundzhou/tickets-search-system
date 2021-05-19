@@ -5,6 +5,7 @@ import HomePage from '../pages/HomePage'
 import TicketsPage from "../pages/TicketsPage";
 import PricesPage from "../pages/PricesPage"
 import CitiesPage from "../pages/CitiesPage"
+import TicketDetailPage from "../pages/TicketDetailPage"
 
 Vue.use(Router)
 
@@ -28,5 +29,9 @@ export default new Router({
       path: '/cities',
       name: 'CitiesPage',
       component: CitiesPage
+    },{
+      path: '/tickets/:id',
+      name: 'TicketDetailPage',
+      component: TicketDetailPage
     },]
 })

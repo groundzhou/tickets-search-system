@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.database import get_db
 import time
+from datetime import date
 
 bp = Blueprint('tickets', __name__, url_prefix='/api/tickets')
 
@@ -20,9 +21,9 @@ def tickets():
             cur.execute('''SELECT id, flight_num, dcity_code, dairport_code, ddate, dtime, acity_code, aairport_code, adate, atime,
                 airline_code, aircraft, aircraft_type, price, discount, class, cdate
                 FROM ground.ticket
-                WHERE dcity_code = %s AND acity_code = %s AND ddate = %s
+                WHERE dcity_code = %s AND acity_code = %s AND ddate = %s AND cdate = %s
                 ORDER BY price
-                LIMIT 5''', (dcity_code, acity_code, ddate))
+                LIMIT 5''', (dcity_code, acity_code, ddate, date.today()))
             result = cur.fetchall()
 
         for t in result:
@@ -65,10 +66,11 @@ def ticket(tid):
                 p['cdate'] = str(p['cdate'])
                 p['price'] = round(p['price'])
             result['prices'] = prices
-            result['dtime'] = result['dtime'].strftime('%H:%M')
-            result['atime'] = result['atime'].strftime('%H:%M')
-            result['ddate'] = str(result['ddate'])
-            result['adate'] = str(result['adate'])
-            result['cdate'] = str(result['cdate'])
-            result['discount'] = str(round(result['discount'] * 10, 1))
+        result['dtime'] = result['dtime'].strftime('%H:%M')
+        result['atime'] = result['atime'].strftime('%H:%M')
+        result['ddate'] = str(result['ddate'])
+        result['adate'] = str(result['adate'])
+        result['cdate'] = str(result['cdate'])
+        result['discount'] = str(round(result['discount'] * 10, 1))
+
         return jsonify(result)
