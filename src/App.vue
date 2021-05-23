@@ -30,7 +30,7 @@
                 href="https://mdbootstrap.com/products/vue-ui-kit/"
                 newTab
                 far
-                icon="gem"
+                icon="user"
             ></mdb-nav-item>
           </mdb-tooltip>
         </mdb-navbar-nav>

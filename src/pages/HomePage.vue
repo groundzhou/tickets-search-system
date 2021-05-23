@@ -11,11 +11,12 @@
               <strong>机票查询</strong>
             </h2>
             <mdb-row>
-              <mdb-col md="3">
-                <img src="../../src/assets/logo-mdb-vue-small.png" class="img-fluid" />
+              <mdb-col md="2"></mdb-col>
+              <mdb-col md="2">
+                <img src="../../src/assets/airplane.png" class="img-fluid" />
               </mdb-col>
-              <mdb-col md="9">
-                <p class="pb-4">
+              <mdb-col md="8">
+                <p class="pb-1">
                   基于大数据技术的机票查询及票价预测系统
                   <br />在此输入您的出发地、目的地、出发日期
                 </p>
@@ -179,8 +180,8 @@ export default {
     return {
       searchData: {
         dcity: "BJS",
-        acity: "SHA",
-        ddate: "2021-05-20",
+        acity: "KMG",
+        ddate: "2021-05-24",
       },
       cities: [],
     };
@@ -192,6 +193,7 @@ export default {
     this.axios.get("/api/cities").then((response) => {
       this.cities = response.data;
     });
+    this.searchData.ddate = new Date().toISOString().slice(0, 10);
   },
   methods:{
     search() {
