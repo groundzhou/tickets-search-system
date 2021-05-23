@@ -24,12 +24,17 @@ def lowest_prices():
                 LIMIT 60''',
                 (dcity_code, acity_code, date.today())
             )
-            result = cur.fetchall()
-
-        for t in result:
+            prices = cur.fetchall()
+        labels = []
+        prices2 = []
+        result = {}
+        for t in prices:
+            labels.append(str(t['ddate'])[5:])
+            prices2.append(t['price'])
             t['ddate'] = str(t['ddate'])
             t['cdate'] = str(t['cdate'])
-
+        result['labels'] = labels
+        result['prices'] = prices2
         return jsonify(result)
 
     if request.method == 'POST':

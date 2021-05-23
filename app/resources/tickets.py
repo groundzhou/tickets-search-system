@@ -60,12 +60,17 @@ def ticket(tid):
                 cur.execute('''
                     SELECT * 
                     FROM ground.bjs_kmg_price
-                    WHERE ticket_id = %s''', (tid,))
+                    WHERE ticket_id = %s
+                    ORDER BY cdate''', (tid,))
                 prices = cur.fetchall()
+            prices2 = []
+            labels = []
             for p in prices:
-                p['cdate'] = str(p['cdate'])
-                p['price'] = round(p['price'])
-            result['prices'] = prices
+                labels.append(str(p['cdate'])[5:])
+                prices2.append(round(p['price']))
+            result['prices'] = prices2
+            result['labels'] = labels
+
         result['dtime'] = result['dtime'].strftime('%H:%M')
         result['atime'] = result['atime'].strftime('%H:%M')
         result['ddate'] = str(result['ddate'])
